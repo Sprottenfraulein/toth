@@ -25,14 +25,16 @@ class Audio:
         }
 
         self.bank_music = {
-            'menu': 'data/just a jiff.ogg',
-            'stage': 'data/among the trees.ogg',
-            'tense': 'data/fairy lights.ogg'
+            'menu': 'data/just_a_jiff.ogg',
+            'stage': 'data/among_the_trees.ogg',
+            'under': 'data/descent.ogg',
+            'tense': 'data/fairy_lights.ogg'
         }
         self.music_playing = None
+        self.mute = False
 
     def play_music(self, name):
-        if self.music_playing is not name:
+        if not self.mute and self.music_playing is not name:
             self.pygame.mixer.music.load(self.bank_music[name])
             self.pygame.mixer.music.play(-1)
         self.music_playing = name

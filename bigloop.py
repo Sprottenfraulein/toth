@@ -36,7 +36,15 @@ class Bigloop:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
-
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_m:
+                        if self.audio.mute:
+                            self.audio.mute = False
+                            pygame.mixer.music.load(self.audio.bank_music[self.audio.music_playing])
+                            pygame.mixer.music.play(-1)
+                        else:
+                            self.audio.mute = True
+                            pygame.mixer.music.stop()
                 game_block.events(pygame, event)
 
             # Game modules

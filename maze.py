@@ -213,7 +213,7 @@ class Maze:
         if counters[2] in (0, 8, 16, 24):
             if self.player.multiplier == 1:
                 self.player.multi_level -= 1
-                audio.play_music('stage')
+                audio.play_music(self.stage_music)
             else:
                 self.player.multi_level -= 2
             if self.player.multi_level <= 0:
@@ -765,14 +765,14 @@ class Maze:
         elif object[0] == 51:
             if tr_type == 0:
                 self.player.stage = 1
-                self.underworld_initial(settings)
+                self.underworld_initial(audio, settings)
                 pl_view_x, pl_view_y = self.calculate_offsets(self.player.x, self.player.y, settings)
                 self.square_set(pl_view_x // self.square_size, pl_view_y // self.square_size + 1,
                                     settings.object_keys['up_b'])
         elif object[0] == 52:
             if tr_type == 0:
                 self.player.stage = 0
-                self.world_initial(settings)
+                self.world_initial(audio, settings)
                 pl_view_x, pl_view_y = self.calculate_offsets(self.player.x, self.player.y, settings)
                 self.square_set(pl_view_x // self.square_size, pl_view_y // self.square_size + 1,
                                 settings.object_keys['down_b'])
@@ -893,11 +893,12 @@ class Maze:
         if enc_rnd is not None and random.randrange(0, enc_rnd) == 0:
             self.encounters.append(
                 goblin.Goblin(
-                    enc_x, enc_y, 2, speed=0.5, speed_arr=3, vision=8, max_cool=120, palette=settings.system['palettes'][9]
+                    enc_x, enc_y, 2, speed=0.5, speed_arr=3, vision=8, max_cool=120,
+                    score=500, palette=settings.system['palettes'][9]
                 )
             )
         else:
-            self.encounters.append(goblin.Goblin(enc_x, enc_y, 2))
+            self.encounters.append(goblin.Goblin(enc_x, enc_y, 2, score=100))
 
         if self.player.dist == 400 or self.player.dist == 800:
             rnd_h = random.randrange(0, self.space_height)
@@ -965,14 +966,18 @@ class Maze:
         for i in range(0, 2):
             self.buff[random.randrange(top, bottom)][random.randrange(left + 1, right - 1)] = [settings.object_keys['pit']]
         if random.randrange(0, 5) == 0:
-            self.buff[random.randrange(top, bottom)][random.randrange(left + 3, right - 3)] = [settings.object_keys['up']]
+            rnd_up_x = random.randrange(left + 3, right - 3)
+            rnd_up_y = random.randrange(top + 1, bottom)
+            self.buff[rnd_up_y-1][rnd_up_x] = [settings.object_keys['brick']]
+            self.buff[rnd_up_y][rnd_up_x] = [settings.object_keys['up']]
 
         for i in range(0, self.player.dist // 500):
             enc_x = random.randrange(self.square_size * 3, self.space_width * self.square_size - self.square_size * 4, self.square_size)
             enc_y = random.randrange(-1 * self.space_height * self.square_size, self.square_size * -1, self.square_size)
             self.encounters.append(
                 goblin.Goblin(
-                    enc_x, enc_y, 2, speed=1, speed_arr=0, vision=0, homing=True, max_cool=120, palette=settings.system['palettes'][5]
+                    enc_x, enc_y, 2, speed=1, speed_arr=0, vision=0, homing=True, max_cool=120,
+                    score=500, palette=settings.system['palettes'][5]
                 )
             )
 
@@ -996,7 +1001,8 @@ class Maze:
                              wealth,
                              None, percents=100)
 
-    def world_initial(self, settings):
+    def world_initial(self, audio, settings):
+        self.stage_music = 'stage'
         self.objects_clear()
 
         for i in self.buff:
@@ -1026,7 +1032,8 @@ class Maze:
         right = self.space_width
         self.build_square(self.buff, top, left, bottom, right, [settings.object_keys['tree']], True, percents=15)
 
-    def underworld_initial(self, settings):
+    def underworld_initial(self, audio, settings):
+        self.stage_music = 'under'
         self.objects_clear()
         for i in self.buff:
             for j in range(0, len(i)):
@@ -1206,8 +1213,11 @@ class Maze:
             tools.draw_text(self.space_width * self.square_size // 2 - len(text) * 8 // 2, 88, text, font, 4, pygame, canvas, settings)
             text = 'CONTINUE: ENTER'
             tools.draw_text(self.space_width * self.square_size // 2 - len(text) * 8 // 2, 96, text, font, 6, pygame, canvas, settings)
-            text = 'QUIT: Q'
+            text = 'TOGGLE MUSIC: M'
             tools.draw_text(self.space_width * self.square_size // 2 - len(text) * 8 // 2, 104, text, font, 6, pygame,
+                            canvas, settings)
+            text = 'QUIT: Q'
+            tools.draw_text(self.space_width * self.square_size // 2 - len(text) * 8 // 2, 112, text, font, 6, pygame,
                             canvas, settings)
 
     def calculate_offsets(self, x, y, settings):
@@ -1249,6 +1259,4 @@ class Maze:
         self.kill_timer = None
 
         random.seed(10)
-        self.world_initial(settings)
-
-        audio.play_music('stage')
+        self.world_initial(audio, settings)

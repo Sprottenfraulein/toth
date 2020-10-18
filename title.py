@@ -41,6 +41,7 @@ class Title:
         if self.start:
             audio.bank_sound['wound_e'].play()
             self.start = False
+            self.page = 0
 
             self.player.max_lives = 3
             self.player.lives = 3
