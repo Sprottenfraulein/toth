@@ -1,4 +1,4 @@
 # toth
 Old school arcade run-and-hide game.
 
-Python 3.8 is highly recommended.
+Performance is poor up to Python 3.7. Python 3.8 is highly recommended.
