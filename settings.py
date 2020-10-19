@@ -105,6 +105,13 @@ system = {
             (0, 150, 0),        # Dark leaves
             (0, 225, 0),        # Light leaves
             (255, 255, 255),    # White
+        ),  # 11
+        (
+            (155, 75, 0),       # Dark wood
+            (255, 0, 255),      # Fuchsia, reserved for color key transparency
+            (220, 150, 0),      # Light wood
+            (250, 220, 0),      # Bright yellow
+            (255, 255, 255),    # White
         )
     ],
     'scoreboard': 'data/hiscores',

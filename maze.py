@@ -1136,7 +1136,7 @@ class Maze:
             player_palette = settings.system['palettes'][
                 settings.animations[self.player.sprites[self.player.direction]]['palettes'][self.player.anim_frame]]
             if self.player.multiplier > 1:
-                player_palette = settings.system['palettes'][4]
+                player_palette = settings.system['palettes'][11]
             tools.draw_tile(canvas, pygame, settings, player_x, player_y, player_sprite, player_mirror_x, 0,
                             player_palette)
 
