@@ -12,6 +12,7 @@ class Hero:
         self.score = score
         self.dist = dist
         self.stage = 0
+        self.boss_keys = 0
 
         self.multiplier = 1
         self.multi_limit = 60

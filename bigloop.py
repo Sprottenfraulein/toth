@@ -5,6 +5,7 @@ import tools
 import alarms
 import maze
 import over
+import final
 import title
 import hiscores
 import random
@@ -24,13 +25,16 @@ class Bigloop:
         game_blocks = {
             'title': title.Title(settings.system['screen_width'], settings.system['screen_height'], self.hiscores, settings, pygame),
             'maze': maze.Maze(settings.system['view_width_sq'], settings.system['view_height_sq'], settings),
-            'over': over.Over(settings.system['screen_width'], settings.system['screen_height'], self.hiscores, settings)
+            'over': over.Over(settings.system['screen_width'], settings.system['screen_height'], self.hiscores, settings),
+            'final': final.Final(settings.system['screen_width'], settings.system['screen_height'], self.hiscores,
+                                 settings)
         }
 
         game_block = game_blocks['title']
         game_block.launch(self.audio, settings, None)
         while True:
             counters = self.alarms.tick()
+            self.dynamic_palettes(counters)
 
             # Check app input events
             for event in pygame.event.get():
@@ -68,3 +72,7 @@ class Bigloop:
 
             # self.clock.tick(settings.system['fps'])
             self.clock.tick_busy_loop(settings.system['fps'])
+
+    def dynamic_palettes(self, counters):
+        if counters[2] in (0, 8, 16, 24):
+            settings.system['palettes'][12][2], settings.system['palettes'][12][3] = settings.system['palettes'][12][3], settings.system['palettes'][12][2]

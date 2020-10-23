@@ -1,5 +1,6 @@
 class Missile:
-    def __init__(self, x, y, tile, sp_x=0, sp_y=0, grav=0.3, life=15, palette=None, mirr_x=False, mirr_y=False, foe=False):
+    def __init__(self, x, y, tile, sp_x=0, sp_y=0, grav=0.3, life=15, palette=None, mirr_x=False, mirr_y=False, foe=False, obj=None):
+        self.obj_spawn = obj
         self.x = x
         self.y = y
         self.sp_x = sp_x

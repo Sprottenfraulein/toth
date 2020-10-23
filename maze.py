@@ -3,6 +3,7 @@ import tools
 import hero
 import particle
 import goblin
+import ogre
 import missile
 import audio
 
@@ -39,6 +40,10 @@ class Maze:
 
         self.kill_timer = None
         self.pause = False
+
+        self.boss1 = False
+        self.boss2 = False
+        self.theend = False
 
     def build_square(self, space, top, left, bottom, right, build_stack, solid, percents=100):
         if solid:
@@ -123,6 +128,9 @@ class Maze:
                     self.player.shotting = True
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_p:
                     self.pause = True
+                if event.key == pygame.K_v:
+                    self.player.lives = self.player.max_lives
+
 
         if event.type == pygame.KEYUP:
             if not self.pause and self.kill_timer is None:
@@ -155,6 +163,7 @@ class Maze:
                                                                 self.missiles[i].y + self.square_size // 2,
                                                                 tiles['dust'], sp_x=rnd_sp, sp_y=-2,
                                                                 palette=settings.system['palettes'][2]))
+                    self.drop_object(self.missiles[i].x, self.missiles[i].y, self.missiles[i].obj_spawn, settings)
                     del self.missiles[i]
                     audio.bank_sound['pierce'].play()
                     i = max(0, i - 1)
@@ -186,6 +195,9 @@ class Maze:
                                                                         tiles['dust'], sp_x=rnd_sp, sp_y=-2,
                                                                         palette=settings.system['palettes'][5]))
                             del self.missiles[i]
+                            if self.encounters[j].__class__.__name__ == 'Ogre':
+                                audio.bank_sound['clank'].play()
+                                continue
                             self.encounters[j].lives -= 2
                             audio.bank_sound['pierce'].play()
                             if self.encounters[j].lives <= 0:
@@ -310,6 +322,8 @@ class Maze:
                     # Game restart
                     self.kill_timer = 300
             if enc.cooldown == 0:
+                if enc.__class__.__name__ == 'Ogre':
+                    enc.palette = settings.system['palettes'][5]
                 if enc.speed_arr > 0 and self.encounter_sight(enc, tiles, audio, settings):
                     enc.cooldown = enc.max_cool
                     continue
@@ -345,6 +359,19 @@ class Maze:
                 enc.walking = True
                 enc.distance = self.square_size
 
+                if enc.__class__.__name__ == 'Ogre':
+                    try:
+                        square = self.square_get(enc_view_x // self.square_size, enc_view_y // self.square_size)
+                        if square is not None:
+                            for i in square:
+                                if i[0] == 201:
+                                    enc.cooldown = 400
+                                    enc.palette = settings.system['palettes'][12]
+                                    self.square_set(enc_view_x // self.square_size, enc_view_y // self.square_size,
+                                                    settings.object_keys['stone'])
+                    except IndexError:
+                        pass
+
         self.view_follow(tiles, counters, audio, self.player.y, settings)
 
         if self.pixel_offset_v == 0:
@@ -371,6 +398,8 @@ class Maze:
             if self.kill_timer == 0:
                 return 'over', {'hero': self.player}
             self.kill_timer -= 1
+        if self.theend:
+            return 'final', {'hero': self.player}
 
     def encounter_paths(self, enc_view_x, enc_view_y, settings):
         dirs = (
@@ -404,6 +433,12 @@ class Maze:
             return False
         dist_x = player_sq_x - enc_sq_x
         dist_y = player_sq_y - enc_sq_y
+        if enc.__class__.__name__ == 'Ogre':
+            sum_dist = abs(dist_y) + abs(dist_x)
+            if sum_dist < 8:
+                enc.speed = enc.speed_slow
+            else:
+                enc.speed = enc.speed_fast
         dir_x = tools.sign(dist_x)
         dir_y = tools.sign(dist_y)
         if dir_x == 0 and dir_y == 0:
@@ -529,6 +564,10 @@ class Maze:
                 enc_view_x, enc_view_y = self.calculate_offsets(round(self.encounters[i].x),
                                                                 round(self.encounters[i].y), settings)
                 if abs(sq_x - enc_view_x) < 8 and abs(sq_y - enc_view_y) < 8:
+                    if self.encounters[i].__class__.__name__ == 'Ogre':
+                        if self.encounters[i].palette != settings.system['palettes'][12]:
+                            audio.bank_sound['clank'].play()
+                            continue
                     self.encounters[i].lives -= 1
                     for j in range(0, 4):
                         rnd_sp = random.randrange(-1, 2)
@@ -537,12 +576,8 @@ class Maze:
                                                                 tiles['dust'], sp_x=rnd_sp, sp_y=-2,
                                                                 palette=settings.system['palettes'][10]))
                     if self.encounters[i].lives == 0:
-                        square = self.square_get(enc_view_x // self.square_size, enc_view_y // self.square_size)
-                        if square is not None:
-                            square.append(settings.object_keys['skull_c'])
-                        else:
-                            self.square_set(enc_view_x // self.square_size, enc_view_y // self.square_size,
-                                            settings.object_keys['skull_c'])
+                        self.drop_object(round(self.encounters[i].x), round(self.encounters[i].y),
+                                         self.encounters[i].drop, settings)
                         self.player.score += 100 * self.player.multiplier
                         if self.player.multiplier > 1:
                             self.player.multi_level = self.player.multi_limit - 1
@@ -581,7 +616,7 @@ class Maze:
 
 
     def view_follow(self, tiles, counters, audio, y, settings):
-        if y < self.space_height * self.square_size // 2:
+        if y < self.space_height * self.square_size // 2 and self.player.dist < 1775:
             self.pixel_offset_v += 1
             self.player.y += 1
             if counters[2] in (0, 8, 16, 24) and self.player.multi_level < self.player.multi_limit:
@@ -600,7 +635,19 @@ class Maze:
             for i in range(0, len(self.encounters)):
                 try:
                     self.encounters[i].y += 1
-                    if self.encounters[i].y > self.space_height * self.square_size:
+                    if self.encounters[i].__class__.__name__ == 'Ogre':
+                        if self.encounters[i].y > self.space_height * self.square_size:
+                            if random.randrange(0,14) == 0:
+                                x_rnd = random.randrange(0, self.space_width * self.square_size - self.square_size, self.square_size // 2)
+                                self.missiles.append(
+                                    missile.Missile(x_rnd, self.space_height * self.square_size - self.square_size * 2,
+                                                    tiles['proj_n'], 0, -3,
+                                                    palette=settings.system['palettes'][12],
+                                                    mirr_x=0, mirr_y=0, life=60, grav=0,
+                                                    foe=True, obj=settings.object_keys['fire_a']))
+                                audio.bank_sound['shot_e'].play()
+                            self.encounters[i].y = self.space_height * self.square_size - self.pixel_offset_v
+                    elif self.encounters[i].y > self.space_height * self.square_size:
                         del self.encounters[i]
                         i = max(0, i - 1)
                 except IndexError:
@@ -755,6 +802,10 @@ class Maze:
             if tr_type == 1:  # skull common
                 audio.bank_sound['crack'].play()
                 return [self.roll_drop(settings, min=20)], True, None
+        elif object[0] == 32:
+            if tr_type == 1:
+                audio.bank_sound['crack'].play()
+                return [settings.object_keys['key_fl']], True, None
         elif object[0] == 34 and tr_type == 1:
             if random.randrange(0, 2) == 0:
                 audio.bank_sound['crack'].play()
@@ -791,6 +842,11 @@ class Maze:
             if self.player.lives == 0:
                 self.kill_timer = 300
             return None, False, None
+        elif object[0] == 218:
+            if tr_type == 0:  # boss key
+                audio.bank_sound['gem'].play()
+                self.player.boss_keys += 1
+                return None, True, 1000
         elif object[0] == 229:
             if tr_type == 0:  # coin
                 audio.bank_sound['coin'].play()
@@ -804,6 +860,10 @@ class Maze:
             elif tr_type == 1:
                 audio.bank_sound['crack'].play()
                 return None, True, None
+        elif object[0] == 55:
+            if tr_type == 0 and self.player.boss_keys >= 2:
+                self.theend = 1
+                return None, False, None
 
         return None, False, None
 
@@ -844,6 +904,16 @@ class Maze:
             if roll >= item[0]:
                 return settings.object_keys[item[1]]
         return None
+
+    def drop_object(self, scr_x, scr_y, obj, settings):
+        if obj is None:
+            return
+        corr_x, corr_y = self.calculate_offsets(scr_x, scr_y, settings)
+        square = self.square_get(corr_x // self.square_size, corr_y // self.square_size)
+        if square is not None:
+            square.append(obj)
+        else:
+            self.square_set(corr_x // self.square_size, corr_y // self.square_size, obj)
 
     def world_generate(self, settings):
         for i in self.buff:
@@ -894,11 +964,11 @@ class Maze:
             self.encounters.append(
                 goblin.Goblin(
                     enc_x, enc_y, 2, speed=0.5, speed_arr=3, vision=8, max_cool=120,
-                    score=500, palette=settings.system['palettes'][9]
+                    score=500, palette=settings.system['palettes'][9], drop=settings.object_keys['skull_c']
                 )
             )
         else:
-            self.encounters.append(goblin.Goblin(enc_x, enc_y, 2, score=100))
+            self.encounters.append(goblin.Goblin(enc_x, enc_y, 2, score=100, drop=settings.object_keys['skull_c']))
 
         if self.player.dist == 400 or self.player.dist == 800:
             rnd_h = random.randrange(0, self.space_height)
@@ -927,6 +997,49 @@ class Maze:
                              door,
                              wealth,
                              None, percents=100)
+
+        if self.player.dist > 1280 and not self.boss1:
+            enc_x = random.randrange(self.square_size * 3,
+                                     self.space_width * self.square_size - self.square_size * 4,
+                                     self.square_size)
+            enc_y = self.space_height * self.square_size
+            self.encounters.append(
+                ogre.Ogre(
+                    enc_x, enc_y, 10, speed_arr=3, vision=5, max_cool=30,
+                    score=5000, homing=True, palette=None, drop=settings.object_keys['skull_v']
+                )
+            )
+            self.boss1 = True
+
+        if self.player.dist > 1750 and not self.boss2:
+            enc_x = random.randrange(self.square_size * 3,
+                                     self.space_width * self.square_size - self.square_size * 4,
+                                     self.square_size)
+            enc_y = random.randrange(-1 * self.space_height * self.square_size, self.square_size * -1,
+                                     self.square_size)
+            top = 0
+            bottom = self.space_height + enc_y // self.square_size
+            left = 0
+            right = self.space_width
+            self.build_square(self.buff, top, left, bottom, right, [settings.object_keys['brick']], True,
+                              percents=100)
+            self.buff[bottom + 1][0] = [settings.object_keys['castlewall']]
+            self.buff[bottom + 1][7] = [settings.object_keys['finish']]
+            self.buff[bottom + 1][8] = [settings.object_keys['finish']]
+            self.encounters.append(
+                goblin.Goblin(
+                    enc_x, enc_y, 10, speed=0.5, speed_arr=3, vision=8, max_cool=10,
+                    score=5000, homing=True, palette=settings.system['palettes'][10],
+                    drop=settings.object_keys['skull_v']
+                )
+            )
+            self.encounters[-1].sprites = {
+                0: 'ogre_n',
+                1: 'ogre_e',
+                2: 'ogre_s',
+                3: 'ogre_w',
+            }
+            self.boss2 = True
 
     def underworld_generate(self, settings):
         for i in self.buff:
@@ -977,7 +1090,7 @@ class Maze:
             self.encounters.append(
                 goblin.Goblin(
                     enc_x, enc_y, 2, speed=1, speed_arr=0, vision=0, homing=True, max_cool=120,
-                    score=500, palette=settings.system['palettes'][5]
+                    score=500, palette=settings.system['palettes'][7], drop=settings.object_keys['skull_c']
                 )
             )
 
@@ -1252,11 +1365,15 @@ class Maze:
         self.ui_score = True
         self.ui_dist = True
 
+        self.boss1 = False
+        self.boss2 = False
+
         self.particles = []
         self.encounters = []
         self.missiles = []
 
         self.kill_timer = None
+        self.theend = False
 
         random.seed(10)
         self.world_initial(audio, settings)

@@ -112,7 +112,14 @@ system = {
             (220, 150, 0),      # Light wood
             (250, 220, 0),      # Bright yellow
             (255, 255, 255),    # White
-        )
+        ),
+        [   # 12
+            (0, 0, 0),          # Black
+            (255, 0, 255),      # Fuchsia, reserved for color key transparency
+            (250, 220, 0),      # Bright yellow
+            (220, 0, 0),        # Dark red
+            (255, 255, 255),    # White
+        ]
     ],
     'scoreboard': 'data/hiscores',
     'demo': 'data/demo'
@@ -165,10 +172,10 @@ tiles = (
     {'name': 'hero_s', 'tileset': 0, 'tile_x': 112, 'tile_y': 16, 'tile_w': 16, 'tile_h': 16},
     {'name': 'hero_e1', 'tileset': 0, 'tile_x': 112, 'tile_y': 32, 'tile_w': 16, 'tile_h': 16},
     {'name': 'hero_e2', 'tileset': 0, 'tile_x': 112, 'tile_y': 48, 'tile_w': 16, 'tile_h': 16},
-    {'name': 'orc_n', 'tileset': 0, 'tile_x': 128, 'tile_y': 0, 'tile_w': 16, 'tile_h': 16},
-    {'name': 'orc_s', 'tileset': 0, 'tile_x': 128, 'tile_y': 16, 'tile_w': 16, 'tile_h': 16},
-    {'name': 'orc_e1', 'tileset': 0, 'tile_x': 128, 'tile_y': 32, 'tile_w': 16, 'tile_h': 16},
-    {'name': 'orc_e2', 'tileset': 0, 'tile_x': 128, 'tile_y': 48, 'tile_w': 16, 'tile_h': 16},
+    {'name': 'ogre_n', 'tileset': 0, 'tile_x': 128, 'tile_y': 0, 'tile_w': 16, 'tile_h': 16},
+    {'name': 'ogre_s', 'tileset': 0, 'tile_x': 128, 'tile_y': 16, 'tile_w': 16, 'tile_h': 16},
+    {'name': 'ogre_e1', 'tileset': 0, 'tile_x': 128, 'tile_y': 32, 'tile_w': 16, 'tile_h': 16},
+    {'name': 'ogre_e2', 'tileset': 0, 'tile_x': 128, 'tile_y': 48, 'tile_w': 16, 'tile_h': 16},
     {'name': 'goblin_n', 'tileset': 0, 'tile_x': 144, 'tile_y': 0, 'tile_w': 16, 'tile_h': 16},
     {'name': 'goblin_s', 'tileset': 0, 'tile_x': 144, 'tile_y': 16, 'tile_w': 16, 'tile_h': 16},
     {'name': 'goblin_e1', 'tileset': 0, 'tile_x': 144, 'tile_y': 32, 'tile_w': 16, 'tile_h': 16},
@@ -325,6 +332,35 @@ mega_tiles = {
         'tile_palette': (
             7,
         )
+    },
+    'castlewall': {
+        'tiles': ('brick', 'gate', 'gate', 'up', 'down', 'tree'),
+        'tile_xy': (
+            (
+                (-16,0),
+            ),
+            (
+                (112,-16),
+            ),
+            (
+                (128,-16),
+            ),
+            (
+                (80,-16), (160,-16)
+            ),
+            (
+                (64,-16), (176,-16), (80, -32), (160, -32)
+            ),
+            (
+                (96,0), (144,0)
+            )
+        ),
+        'tile_mirror': (
+            (0,0), (0,0), (1,0), (0,0), (0,0), (0,0)
+        ),
+        'tile_palette': (
+            2, 6, 6, 2, 2, 10
+        )
     }
 }
 
@@ -454,6 +490,51 @@ animations = {
             (1,0), (1,0),
         ),
         'palettes': (10, 10)
+    },
+    'ogre_n': {
+        'tiles': ('ogre_n', 'ogre_n'),
+        'megatiles': False,
+        'counter': 0,
+        'mirror': (
+            (0,0), (1,0),
+        ),
+        'palettes': (5, 5)
+    },
+    'ogre_s': {
+        'tiles': ('ogre_s', 'ogre_s'),
+        'megatiles': False,
+        'counter': 0,
+        'mirror': (
+            (0,0), (1,0),
+        ),
+        'palettes': (5, 5)
+    },
+    'ogre_e': {
+        'tiles': ('ogre_e1', 'ogre_e2'),
+        'megatiles': False,
+        'counter': 0,
+        'mirror': (
+            (0,0), (0,0),
+        ),
+        'palettes': (5, 5)
+    },
+    'ogre_w': {
+        'tiles': ('ogre_e1', 'ogre_e2'),
+        'megatiles': False,
+        'counter': 0,
+        'mirror': (
+            (1,0), (1,0),
+        ),
+        'palettes': (5, 5)
+    },
+    'key_fl': {
+        'tiles': ('key', 'key'),
+        'megatiles': False,
+        'counter': 0,
+        'mirror': (
+            (0,0), (0,0),
+        ),
+        'palettes': (11, 5)
     }
 }
 
@@ -501,20 +582,23 @@ map_keys = {
     40: 'hero_s',
     41: 'hero_e1',
     42: 'hero_e2',
-    43: 'orc_n',
-    44: 'orc_s',
-    45: 'orc_e1',
-    46: 'orc_e2',
+    43: 'ogre_n',
+    44: 'ogre_s',
+    45: 'ogre_e1',
+    46: 'ogre_e2',
     47: 'goblin_n',
     48: 'goblin_s',
     49: 'goblin_e1',
     50: 'goblin_e2',
     51: 'down',
     52: 'up',
+    55: 'up',
+    100: 'castlewall',
     151: 'down_b',
     152: 'up_b',
     201: 'fire',
     212: 'heart',
+    218: 'key_fl',
     229: 'coin',
     230: 'gem',
     238: 'splash',
@@ -522,6 +606,10 @@ map_keys = {
     240: 'hero_s',
     241: 'hero_e',
     242: 'hero_w',
+    243: 'ogre_n',
+    244: 'ogre_s',
+    245: 'ogre_e',
+    246: 'ogre_w'
 }
 
 object_keys = {
@@ -555,6 +643,10 @@ object_keys = {
     'up': (52, 0, 0, 7),
     'down_b': (151, 0, 0, 7),
     'up_b': (152, 0, 0, 7),
+    'skull_v': (32, 0, 0, 2),
+    'castlewall': (100, 0, 0, None),
+    'key_fl': (218, 0, 0, 4),
+    'finish': (55, 0, 0, 2)
 }
 
 

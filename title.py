@@ -43,7 +43,7 @@ class Title:
             self.start = False
             self.page = 0
 
-            self.player.max_lives = 3
+            self.player.max_lives = 5
             self.player.lives = 3
             self.player.blade = 0
             self.player.shots = 3
@@ -52,6 +52,8 @@ class Title:
             self.player.coins = 0
             self.player.score = 0
             self.player.dist = 0
+            self.player.stage = 0
+            self.player.boss_keys = 0
             self.multiplier = 1
             self.multi_limit = 60
             self.multi_level = 0
