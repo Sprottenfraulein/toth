@@ -5,7 +5,7 @@ system = {
     'screen_width': 256,
     'screen_height': 240,
     'screen_scale': 3,
-    'main_window_caption': 'Trial of the Herald, v1.1a',
+    'main_window_caption': 'Trial of the Herald, v1.1b',
     'view_x': 0,
     'view_y': 0,
     'fps': 60,
